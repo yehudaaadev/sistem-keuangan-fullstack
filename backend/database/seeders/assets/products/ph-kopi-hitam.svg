@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Mug kopi hitam">
+<defs><radialGradient id="g" cx=".28" cy=".18" r=".95"><stop offset="0" stop-color="#4b3323"/><stop offset="1" stop-color="#1e1611"/></radialGradient></defs>
+<rect width="400" height="400" fill="url(#g)"/>
+<circle cx="200" cy="205" r="150" fill="none" stroke="#f0b673" stroke-opacity=".12" stroke-width="2" stroke-dasharray="3 9" stroke-linecap="round"/>
+<g fill="none" stroke="#f0b673" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+<ellipse cx="200" cy="300" rx="112" ry="18"/>
+<path d="M128 168h132v82c0 32-24 50-66 50s-66-18-66-50z"/>
+<ellipse cx="194" cy="168" rx="66" ry="12"/>
+<path d="M260 190h14c24 0 30 46 0 46h-14"/>
+<path stroke-width="5" opacity=".6" d="M152 226c10 16 26 22 42 22"/>
+<path opacity=".55" d="M164 136c-12-14 12-24 0-40M194 130c-12-14 12-24 0-40M224 136c-12-14 12-24 0-40"/>
+</g>
+</svg>

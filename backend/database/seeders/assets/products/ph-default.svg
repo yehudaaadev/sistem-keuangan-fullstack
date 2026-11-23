@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Biji kopi">
+<defs><radialGradient id="g" cx=".28" cy=".18" r=".95"><stop offset="0" stop-color="#4b3323"/><stop offset="1" stop-color="#1e1611"/></radialGradient></defs>
+<rect width="400" height="400" fill="url(#g)"/>
+<circle cx="200" cy="205" r="150" fill="none" stroke="#f0b673" stroke-opacity=".12" stroke-width="2" stroke-dasharray="3 9" stroke-linecap="round"/>
+<g fill="none" stroke="#f0b673" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+<path d="M200 96c56 0 92 48 92 108s-36 108-92 108-92-48-92-108 36-108 92-108z" transform="rotate(28 200 204)"/>
+<path d="M162 118c40 28 44 60 18 96-24 34-16 62 20 84" transform="rotate(0 200 204)"/>
+</g>
+</svg>

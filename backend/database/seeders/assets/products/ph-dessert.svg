@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Potongan kue dessert">
+<defs><radialGradient id="g" cx=".28" cy=".18" r=".95"><stop offset="0" stop-color="#4b3323"/><stop offset="1" stop-color="#1e1611"/></radialGradient></defs>
+<rect width="400" height="400" fill="url(#g)"/>
+<circle cx="200" cy="205" r="150" fill="none" stroke="#f0b673" stroke-opacity=".12" stroke-width="2" stroke-dasharray="3 9" stroke-linecap="round"/>
+<g fill="none" stroke="#f0b673" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+<ellipse cx="200" cy="286" rx="132" ry="30"/>
+<path d="M112 262v-66l176-30v70c-30 16-118 26-176 26z"/>
+<path d="M112 222c58 12 146 2 176-26M112 244c58 12 146 2 176-26" opacity=".6"/>
+<circle cx="164" cy="172" r="13"/>
+<path d="M164 159c2-14 12-22 24-24" />
+</g>
+</svg>

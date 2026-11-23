@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Gelas minuman non-kopi">
+<defs><radialGradient id="g" cx=".28" cy=".18" r=".95"><stop offset="0" stop-color="#4b3323"/><stop offset="1" stop-color="#1e1611"/></radialGradient></defs>
+<rect width="400" height="400" fill="url(#g)"/>
+<circle cx="200" cy="205" r="150" fill="none" stroke="#f0b673" stroke-opacity=".12" stroke-width="2" stroke-dasharray="3 9" stroke-linecap="round"/>
+<g fill="none" stroke="#f0b673" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+<path d="M140 128h120l-14 172c-1 10-8 16-18 16h-56c-10 0-17-6-18-16z"/>
+<path d="M146 196h108" opacity=".6"/>
+<path d="M232 70l-18 100"/>
+<rect x="164" y="218" width="34" height="34" rx="7" transform="rotate(-12 181 235)"/>
+<rect x="208" y="244" width="30" height="30" rx="7" transform="rotate(10 223 259)"/>
+<path d="M138 128h124" />
+</g>
+</svg>

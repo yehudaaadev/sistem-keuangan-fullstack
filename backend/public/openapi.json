@@ -1,0 +1,317 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Kedai Kopi — Sistem Keuangan & POS API",
+    "version": "1.0.0",
+    "description": "Dokumentasi API lengkap untuk Sistem POS, Manajemen Stok Bahan Baku, Shift Kasir, Pesanan Online, dan Laporan Keuangan Laba/Rugi."
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "API v1 Endpoint"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Sanctum Token"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/login": {
+      "post": {
+        "summary": "Login Staf / Pelanggan",
+        "description": "Mendapatkan Sanctum Bearer Token dan data user.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "example": "kasir@example.com" },
+                  "password": { "type": "string", "example": "password" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login berhasil, mengembalikan token dan profil user." },
+          "422": { "description": "Email atau password salah / validasi gagal." }
+        }
+      }
+    },
+    "/daftar": {
+      "post": {
+        "summary": "Pendaftaran Akun Pelanggan",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "password"],
+                "properties": {
+                  "name": { "type": "string", "example": "Budi Santoso" },
+                  "email": { "type": "string", "example": "budi@example.com" },
+                  "telepon": { "type": "string", "example": "081234567890" },
+                  "password": { "type": "string", "example": "rahasia123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Pendaftaran berhasil, otomatis login." }
+        }
+      }
+    },
+    "/lupa-sandi": {
+      "post": {
+        "summary": "Permintaan OTP Reset Kata Sandi",
+        "description": "Mengirimkan 6-digit OTP ke nomor WhatsApp terdaftar melalui gateway Fonnte.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "example": "kasir@example.com" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Kode OTP berhasil dikirim ke WhatsApp / kontak." },
+          "422": { "description": "Akun tidak ditemukan." }
+        }
+      }
+    },
+    "/reset-sandi": {
+      "post": {
+        "summary": "Verifikasi OTP & Reset Sandi Baru",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "otp", "password"],
+                "properties": {
+                  "email": { "type": "string", "example": "kasir@example.com" },
+                  "otp": { "type": "string", "example": "123456" },
+                  "password": { "type": "string", "example": "sandiBaru123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Kata sandi berhasil direset." },
+          "422": { "description": "OTP salah atau kedaluwarsa." }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "summary": "Data Akun yang Sedang Login",
+        "responses": {
+          "200": { "description": "Profil pengguna saat ini." }
+        }
+      }
+    },
+    "/produk": {
+      "get": {
+        "summary": "Daftar Menu Produk & Stok",
+        "description": "Menampilkan katalog produk. Untuk kasir dan pelanggan, harga modal dan resep otomatis disembunyikan.",
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "kategori_id", "in": "query", "schema": { "type": "integer" } },
+          { "name": "stok_status", "in": "query", "schema": { "type": "string", "enum": ["habis", "menipis"] } },
+          { "name": "page", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Daftar produk terpaginasi." }
+        }
+      },
+      "post": {
+        "summary": "Tambah Menu Baru (Admin/Owner)",
+        "responses": {
+          "201": { "description": "Produk berhasil dibuat." }
+        }
+      }
+    },
+    "/penjualan": {
+      "get": {
+        "summary": "Riwayat Transaksi Penjualan (Kasir/Admin/Owner)",
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "bulan", "in": "query", "schema": { "type": "string", "example": "2026-10" } },
+          { "name": "dari", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "sampai", "in": "query", "schema": { "type": "string", "format": "date" } }
+        ],
+        "responses": {
+          "200": { "description": "Daftar nota penjualan." }
+        }
+      },
+      "post": {
+        "summary": "Transaksi Penjualan Baru Kasir (POS)",
+        "description": "Menyimpan nota kasir, memotong stok, memvalidasi shift kasir, dan menghitung kembalian.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["items"],
+                "properties": {
+                  "tipe": { "type": "string", "enum": ["dine_in", "bawa_pulang"], "default": "dine_in" },
+                  "meja": { "type": "string", "example": "5" },
+                  "metode": { "type": "string", "enum": ["tunai", "qris", "kartu", "transfer"], "default": "tunai" },
+                  "bayar": { "type": "number", "example": 100000 },
+                  "voucher": { "type": "string", "example": "DISKON10" },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["produk_id", "qty"],
+                      "properties": {
+                        "produk_id": { "type": "integer", "example": 1 },
+                        "qty": { "type": "number", "example": 2 },
+                        "opsi": { "type": "array", "items": { "type": "integer" } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Nota penjualan berhasil dicatat." }
+        }
+      }
+    },
+    "/penjualan/{id}/void": {
+      "post": {
+        "summary": "Pembatalan (Void) Nota Penjualan",
+        "description": "Kasir hanya boleh membatalkan nota di shift aktifnya. Admin & Owner boleh kapan saja.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["alasan"],
+                "properties": {
+                  "alasan": { "type": "string", "example": "Salah input meja dan pesanan pelanggan" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Nota berhasil dibatalkan dan stok dikembalikan." }
+        }
+      }
+    },
+    "/penjualan/{id}/escpos": {
+      "get": {
+        "summary": "Struk Thermal ESC/POS (Kasir/Admin)",
+        "description": "Menghasilkan format struk thermal 32 kolom untuk printer kasir fisik (format=text untuk teks rapi monospace, format=raw untuk binary ESC/POS buffer).",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "name": "format", "in": "query", "schema": { "type": "string", "enum": ["text", "raw"], "default": "text" } }
+        ],
+        "responses": {
+          "200": { "description": "Teks struk atau binary stream printer kasir." }
+        }
+      }
+    },
+    "/shift/aktif": {
+      "get": {
+        "summary": "Cek Shift Aktif Kasir",
+        "responses": {
+          "200": { "description": "Data shift kasir saat ini beserta ringkasan kas laci." }
+        }
+      }
+    },
+    "/shift/buka": {
+      "post": {
+        "summary": "Buka Shift Baru Kasir",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["modal_awal"],
+                "properties": {
+                  "modal_awal": { "type": "number", "example": 200000 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Shift berhasil dibuka." }
+        }
+      }
+    },
+    "/shift/tutup": {
+      "post": {
+        "summary": "Tutup Shift & Rekap Kasir",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["uang_dihitung"],
+                "properties": {
+                  "uang_dihitung": { "type": "number", "example": 850000 },
+                  "catatan": { "type": "string", "example": "Laci kas rapi" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Shift ditutup dan selisih kas dihitung otomatis." }
+        }
+      }
+    },
+    "/laporan/laba-rugi": {
+      "get": {
+        "summary": "Laporan Laba Rugi Komprehensif (Owner)",
+        "parameters": [
+          { "name": "bulan", "in": "query", "schema": { "type": "string", "example": "2026-10" } }
+        ],
+        "responses": {
+          "200": { "description": "Ringkasan omzet, HPP, laba kotor, beban operasional, dan laba bersih." }
+        }
+      }
+    }
+  }
+}
+

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Cangkir kopi susu">
+<defs><radialGradient id="g" cx=".28" cy=".18" r=".95"><stop offset="0" stop-color="#4b3323"/><stop offset="1" stop-color="#1e1611"/></radialGradient></defs>
+<rect width="400" height="400" fill="url(#g)"/>
+<circle cx="200" cy="205" r="150" fill="none" stroke="#f0b673" stroke-opacity=".12" stroke-width="2" stroke-dasharray="3 9" stroke-linecap="round"/>
+<g fill="none" stroke="#f0b673" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+<ellipse cx="200" cy="296" rx="120" ry="20"/>
+<path d="M118 182h164v34c0 48-34 80-82 80s-82-32-82-80z"/>
+<ellipse cx="200" cy="182" rx="82" ry="14"/>
+<path d="M282 198c36-2 40 44 2 52"/>
+<path stroke-width="5" d="M200 194c-9-9-21-1-14 7l14 9 14-9c7-8-5-16-14-7z"/>
+<path opacity=".55" d="M170 146c-12-14 12-24 0-40M200 140c-12-14 12-24 0-40M230 146c-12-14 12-24 0-40"/>
+</g>
+</svg>
