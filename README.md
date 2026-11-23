@@ -1,104 +1,111 @@
-# Sistem Informasi Keuangan & Kasir POS Kedai Kopi (Full-Stack)
+# Sistem Informasi Keuangan & Kasir POS Kedai Kopi
 
-Sistem Point of Sale (POS) dan tata kelola finansial terpadu untuk kedai kopi dan retail modern. Dibangun menggunakan arsitektur *decoupled client-server* yang mengintegrasikan backend REST API **Laravel 12** dengan aplikasi kasir multi-platform **Flutter** (Android Mobile/Tablet & Windows Desktop) serta panel web administrasi berbasis **Alpine.js**.
+[![Laravel](https://img.shields.io/badge/Backend-Laravel_12-FF2D20?style=flat-square&logo=laravel&logoColor=white)](https://laravel.com)
+[![Flutter](https://img.shields.io/badge/Frontend-Flutter_3-02569B?style=flat-square&logo=flutter&logoColor=white)](https://flutter.dev)
+[![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php&logoColor=white)](https://php.net)
+[![Dart](https://img.shields.io/badge/Dart-3.0+-0175C2?style=flat-square&logo=dart&logoColor=white)](https://dart.dev)
+[![MySQL](https://img.shields.io/badge/Database-MySQL_8-4479A1?style=flat-square&logo=mysql&logoColor=white)](https://mysql.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+
+Sistem Point of Sale (POS) kasir dan tata kelola keuangan retail terintegrasi. Mengadopsi arsitektur *decoupled client-server* yang menghubungkan antarmuka kasir multi-platform **Flutter** (Android Mobile, Tablet, dan Windows Desktop) dengan layanan REST API **Laravel 12**, dilengkapi panel administrasi web berbasis **Alpine.js**.
 
 ---
 
-## Arsitektur Terintegrasi & Alur Data
+## Ikhtisar Arsitektur Sistem
 
-Sistem menghubungkan kasir di lini depan langsung dengan pembukuan dan kontrol manajerial di lini belakang melalui kontrak API real-time:
+Arsitektur dirancang untuk menjamin pemisahan tanggung jawab (*separation of concerns*) yang jelas antara lini depan operasional dan lini belakang akuntansi:
 
 ```mermaid
 flowchart TD
-    subgraph Frontend["Frontend Kasir (Flutter POS)"]
-        FlutterApp["Aplikasi Kasir Flutter\n(Android / Windows Desktop)"]
-        ThermalPrint["Pencetakan Nota Kasir\n(ESC/POS 58mm, 80mm & PDF)"]
-        LocalShift["Bilah Shift & Laci Kas\n(Modal Awal, Mutasi, Tutup Shift)"]
-        FlutterApp --> ThermalPrint
-        FlutterApp --> LocalShift
+    subgraph ClientLayer["Lini Depan / Client (Flutter POS)"]
+        POS["Aplikasi Kasir Multi-Platform\n(Android / Windows Desktop)"]
+        Thermal["Thermal Receipt Engine\n(ESC/POS 58mm & 80mm / PDF)"]
+        ShiftClient["Manajemen Laci Kasir\n(Modal Awal, Mutasi, Tutup Shift)"]
+        POS --> Thermal
+        POS --> ShiftClient
     end
 
-    subgraph API["Kontrak API (RESTful JSON + Bearer Token)"]
-        AuthRoute["POST /api/v1/login\n(Laravel Sanctum Token)"]
-        PingRoute["GET /api/v1/ping\n(Latency & DB Health-Check)"]
-        SyncRoute["POST /api/v1/penjualan\n(Atomic DB::transaction)"]
+    subgraph TransportLayer["Lapisan Komunikasi (RESTful API v1)"]
+        AuthEndpoint["POST /api/v1/login\n(Laravel Sanctum Token)"]
+        PingEndpoint["GET /api/v1/ping\n(Latency & Health Ping)"]
+        TrxEndpoint["POST /api/v1/penjualan\n(Atomic DB::transaction)"]
     end
 
-    subgraph Backend["Backend & Panel Kontrol (Laravel 12 + MySQL)"]
-        LaravelCore["Core API & Middleware\n(Audit Trail, Fiscal Lock, COA)"]
-        MySQL[("Database MySQL\n(Stok Bahan, Penjualan, Jurnal Kas)")]
-        WebAdmin["Web Admin & Owner Panel\n(Alpine.js + Tailwind CSS)"]
-        LaravelCore --> MySQL
-        WebAdmin --> LaravelCore
+    subgraph ServerLayer["Lini Belakang / Backend (Laravel 12 + MySQL)"]
+        CoreAPI["Business Logic & Security Core\n(Audit Trail, Fiscal Lock, COA)"]
+        DB[("Basis Data Relasional MySQL\n(Stok Bahan, Penjualan, Jurnal Kas)")]
+        WebPanel["Panel Admin & Owner Web\n(Alpine.js + Tailwind CSS)"]
+        CoreAPI --> DB
+        WebPanel --> CoreAPI
     end
 
-    FlutterApp <-->|"HTTP Dio Client (Bearer Token)"| AuthRoute
-    FlutterApp <-->|"Host Dynamic Switcher"| PingRoute
-    FlutterApp -->|"Checkout & Potong Stok"| SyncRoute
-    SyncRoute --> LaravelCore
+    POS <-->|"Dio Client (Bearer Token)"| AuthEndpoint
+    POS <-->|"Host Dynamic Switcher"| PingEndpoint
+    POS -->|"Checkout & Mutasi Stok"| TrxEndpoint
+    TrxEndpoint --> CoreAPI
 ```
 
 ---
 
-## Komponen Teknologi & Sinergi Sistem
+## Matriks Komponen & Teknologi
 
-| Lapisan | Komponen | Teknologi | Peran & Integrasi |
+| Komponen | Direktori | Stack Teknologi | Tanggung Jawab Utama |
 |---|---|---|---|
-| **Client Kasir** | `mobile/` | Flutter 3, Dart, Dio Client, SharedPreferences | Antarmuka kasir cepat berdesain Swiss/Industrial, tiket pesanan real-time, manajemen shift laci kasir, dan pencetakan nota thermal. |
-| **Backend API** | `backend/` | Laravel 12, PHP 8.2+, Laravel Sanctum | Pintu gerbang REST API v1, penerbit Bearer Token per sesi login, validasi transaksi atomik, dan kalkulasi mutasi stok bahan baku. |
-| **Web Admin & Audit** | `backend/` | Blade, Alpine.js, Tailwind CSS | Dashboard operasional web, persetujuan opname selisih oleh Owner, pencatatan beban operasional (COA 5-1100), dan jejak audit enterprise. |
-| **Penyimpanan Data**| Local / Server | MySQL 8.0+ | Penyimpanan relasional terisolasi untuk katalog varian menu, transaksi penjualan, riwayat belanja distributor, dan sesi kasir. |
+| **Client Kasir (POS)** | `mobile/` | Flutter 3, Dart, Dio, SharedPreferences | Antarmuka kasir berkecepatan tinggi, input varian menu, tiket pesanan, manajemen shift laci kasir, dan pencetakan nota thermal. |
+| **Backend REST API** | `backend/` | Laravel 12, PHP 8.2+, Laravel Sanctum | Pintu gerbang API v1, penerbitan token otentikasi, validasi transaksi atomik, dan kalkulasi mutasi stok bahan otomatis. |
+| **Panel Web Manajemen** | `backend/` | Blade, Alpine.js, Tailwind CSS | Dashboard operasional web, persetujuan penyesuaian stok oleh Owner, pencatatan beban operasional, dan jejak audit aktivitas. |
+| **Penyimpanan Data** | Database | MySQL 8.0+ | Penyimpanan data transaksi, relasi katalog produk, riwayat belanja distributor, dan log rekonsiliasi kas. |
 
 ---
 
-## Fitur-Fitur Terintegrasi
+## Fitur Utama
 
-### 1. Sinkronisasi Kasir (Flutter) & Backend (Laravel)
-- **Otentikasi Sanctum Berbasis Sesi:** Kasir login dari aplikasi Flutter menggunakan akun kasir. Backend menerbitkan *Bearer Token* Sanctum yang disimpan di `SharedPreferences` perangkat mobile.
-- **Konfigurasi Host Dinamis & Uji Latensi:** Tombol **Host API** pada form login Flutter memungkinkan kasir berpindah alamat server secara fleksibel (IP LAN Komputer, Cloudflare Tunnel, Android Emulator `10.0.2.2`, atau Server Cloud) disertai tombol **Tes Koneksi** yang memanggil endpoint `GET /api/v1/ping` untuk memverifikasi latensi milidetik server sebelum login.
-- **Transaksi Penjualan Atomik:** Saat kasir menekan tombol bayar di Flutter, transaksi dikirimkan ke backend dan diproses di dalam blok `DB::transaction()`. Pengurangan stok bahan baku dan penambahan saldo buku kas terjadi seketika tanpa risiko inkonsistensi data.
+### 1. Operasional Kasir & Antarmuka POS (Flutter)
+- **Desain Industrial POS:** Mengadopsi prinsip desain *Swiss Style* dengan kartu solid berkontras tinggi (*crisp borders* 1.2px - 2.0px) tanpa efek blur yang memberatkan grafis perangkat kasir.
+- **Tiket Pesanan Real-Time:** Penanganan tipe pesanan (*Dine In* / *Take Away*), input nomor meja, opsi modifier (suhu, ukuran, level gula, es, topping), dan kalkulator cepat uang kembalian.
+- **Bilah Shift Terintegrasi:** Memantau jam buka shift, modal awal laci kasir, akumulasi transaksi, pencatatan kas masuk/keluar, dan verifikasi selisih kas fisik saat tutup shift.
+- **Pencetakan Nota Universal:** Mendukung standar rol thermal **80 mm (POS USB/PC)**, rol kecil **58 mm (Printer Mini Bluetooth)**, dokumen **A4 / Simpan PDF**, serta pengiriman bukti transaksi digital via WhatsApp.
+- **Pengalih Host Dinamis:** Tombol konfigurasi alamat server pada halaman masuk (*login*) dengan opsi preset (LAN IP, Emulator Android `10.0.2.2`, Cloudflare Tunnel) dan fitur uji latensi (*host ping*) milidetik langsung.
 
-### 2. Operasional Kasir & POS Fisik (Flutter Client)
-- **Tiket Pesanan Real-Time (*Artisan Order Ticket*):** Pemilihan tipe pesanan (*Dine In* / *Take Away*), input nomor meja, pilihan varian (suhu, ukuran, kadar gula, es, topping), dan kalkulator hitung uang kembalian.
-- **Manajemen Shift Terpadu (*Compact Ribbon*):** Pencatatan modal awal laci saat buka toko, mutasi kas masuk/keluar harian, dan rekonsiliasi selisih kas fisik saat tutup shift.
-- **Pencetakan Struk Multi-Format:** Mendukung rol standar **80 mm (POS USB/PC)**, rol kecil **58 mm (Printer Mini Bluetooth)**, dan kertas **A4 / Simpan PDF** langsung melalui sistem cetak bawaan perangkat.
-
-### 3. Kontrol Manajerial & Keuangan Korporat (Laravel Backend)
-- **Stok Opname & Approval Owner:** Penyesuaian stok yang mengalami selisih fisik (rusak, hilang, susut) secara otomatis berstatus `menunggu_persetujuan` dan membutuhkan konfirmasi Owner sebelum stok sistem diperbarui.
-- **Pencatatan Beban Operasional & Bukti Fisik:** Nomor voucher kas keluar otomatis (`BKK-YYYYMMDD-XXXXX`), pemetaan akun (*Chart of Accounts* COA `5-1100` s.d. `5-1900`), dan arsip lampiran berkas kuitansi (PDF/JPG).
-- **Enterprise Audit Trail & Fiscal Lock:** Mencatat seluruh log mutasi belanja, perubahan harga, login staf beserta User-Agent, serta penguncian tanggal buku (*Fiscal Lock*) untuk mencegah transaksi manipulatif di masa lampau.
+### 2. Finansial & Tata Kelola Korporat (Laravel 12 Backend)
+- **Integritas Transaksi Atomik:** Setiap transaksi diproses di dalam `DB::transaction()` untuk menjamin pemotongan stok bahan baku dan penambahan kas berlangsung konsisten.
+- **Stok Opname & Persetujuan Owner:** Penyesuaian stok dengan selisih fisik (rusak, hilang, susut) secara otomatis berstatus `menunggu_persetujuan` sebelum stok sistem dipotong.
+- **Beban Operasional & Bukti Fisik:** Penomoran voucher pengeluaran kas otomatis (`BKK-YYYYMMDD-XXXXX`), pemetaan *Chart of Accounts* (COA `5-1100` s.d. `5-1900`), dan lampiran bukti kuitansi (PDF/JPG).
+- **Tutup Buku (Fiscal Lock):** Mekanisme penguncian tanggal pembukuan yang menolak transaksi di masa lampau untuk menjaga integritas data akuntansi dan pelaporan pajak.
+- **Enterprise Audit Trail:** Jejak audit komprehensif mencatat riwayat masuk/keluar staf, perubahan harga jual, transaksi belanja distributor, serta User-Agent perangkat.
 
 ---
 
-## Matriks Peran & Akun Uji Coba
+## Matriks Peran & Akun Pengujian
 
-| Peran | Saluran Akses | Wewenang Utama | Akun Bawaan Seeder |
+| Peran | Saluran Akses | Batasan & Hak Akses | Akun Bawaan Seeder |
 |---|---|---|---|
-| **Kasir** | Flutter App (Mobile/Desktop) & Web | Buka/tutup shift, transaksi POS, mutasi kas laci, cetak nota, antrean pesanan. | `kasir@example.com` / `password` |
-| **Admin** | Web Dashboard | Master data menu & bahan, belanja distributor, input opname stok, catat beban operasional, monitoring shift kasir. | `admin@example.com` / `password` |
-| **Owner** | Web Dashboard | Hak penuh: persetujuan selisih stok, ubah/hapus beban, voucher diskon, pembatalan transaksi, dan laporan finansial komprehensif. | `owner@example.com` / `password` |
+| **Kasir** | Flutter App (Mobile/Desktop) | Buka/tutup shift, transaksi POS, mutasi kas laci, cetak nota struk, antrean pesanan. | `kasir@example.com` / `password` |
+| **Admin** | Web Dashboard | Master data menu & bahan, belanja distributor, input stok opname, catat beban operasional. | `admin@example.com` / `password` |
+| **Owner** | Web Dashboard | Hak absolut: persetujuan selisih stok, ubah/hapus beban, voucher diskon, pembatalan transaksi, dan laporan laba rugi. | `owner@example.com` / `password` |
 
 ---
 
-## Panduan Instalasi & Menjalankan Sistem
+## Panduan Pemasangan & Menjalankan Sistem
 
-### Persyaratan Sistem
-- PHP >= 8.2 & Composer >= 2.x
-- MySQL Database
+### Kebutuhan Perangkat Lunak
+- PHP >= 8.2
+- Composer >= 2.x
+- Basis Data MySQL
 - Flutter SDK >= 3.x
 
 ---
 
-### Tahap 1: Setup Backend Laravel API
+### Langkah 1: Menyiapkan Backend Laravel
 
 ```bash
 cd backend
 
-# Salin konfigurasi environment dan instal paket
+# Salin konfigurasi lingkungan dan pasang pustaka pendukung
 cp .env.example .env
 composer install
 
-# Generate application key
+# Buat kunci enkripsi aplikasi
 php artisan key:generate
 
 # Konfigurasikan koneksi basis data di berkas .env:
@@ -106,55 +113,56 @@ php artisan key:generate
 # DB_USERNAME=root
 # DB_PASSWORD=
 
-# Eksekusi migrasi tabel dan seeder data awal
+# Jalankan migrasi skema tabel dan seeder data awal
 php artisan migrate --seed
 
-# Jalankan server API (bisa diakses oleh HP/komputer di jaringan LAN yang sama)
+# Jalankan server lokal (dapat diakses oleh klien dalam jaringan LAN)
 php artisan serve --host=0.0.0.0 --port=8000
 ```
 
-> **Akses Cepat (Windows):** Klik ganda berkas `backend/jalankan-server.bat`. Skrip otomatis mendeteksi IP lokal komputer Anda dan menjalankan backend pada port `8000`.
+> **Jalur Cepat (Windows):** Klik ganda berkas `backend/jalankan-server.bat` untuk menjalankan server secara otomatis pada alamat IP lokal perangkat Anda.
 
 ---
 
-### Tahap 2: Menghubungkan Frontend Flutter
+### Langkah 2: Menyiapkan Frontend Flutter
 
 ```bash
 cd mobile
 
-# Unduh dependensi aplikasi Flutter
+# Unduh paket dependensi Flutter
 flutter pub get
 
-# Jalankan aplikasi kasir pada perangkat yang diinginkan
+# Jalankan aplikasi kasir pada perangkat yang terhubung
 flutter run
 ```
 
-#### Menghubungkan Aplikasi ke Server:
-1. Buka aplikasi di perangkat (HP / Desktop / Emulator).
-2. Pada layar login, klik tombol **Host API** di bagian bawah.
-3. Masukkan alamat server backend:
+#### Menghubungkan Kasir ke Server:
+1. Buka aplikasi kasir di perangkat (HP Android, Tablet, atau PC Windows).
+2. Pada layar login, pilih menu **Host API** di bagian bawah.
+3. Tentukan alamat server backend:
    - **Emulator Android:** `http://10.0.2.2:8000`
-   - **HP Fisik (Wi-Fi LAN sama):** `http://<IP-Komputer-Anda>:8000` (contoh: `http://192.168.1.15:8000`)
-   - **Akses Luar Jaringan:** Gunakan URL Cloudflare Tunnel dari `backend/jalankan-tunnel.bat`.
-4. Klik **Tes Koneksi** untuk memastikan status database menyala, lalu simpan.
-5. Gunakan tombol cepat profil **Kasir** atau ketik `kasir@example.com` / `password` untuk mulai bertransaksi.
+   - **Perangkat Fisik (Wi-Fi LAN sama):** `http://<IP-Komputer>:8000`
+   - **Luar Jaringan:** Masukkan alamat Cloudflare Tunnel dari `backend/jalankan-tunnel.bat`.
+4. Tekan **Tes Koneksi** untuk memverifikasi respons server, lalu simpan.
+5. Masuk menggunakan akun kasir (`kasir@example.com` / `password`).
 
 ---
 
-## Kompilasi APK Android Mandiri
+### Kompilasi Paket APK Android
 
-Untuk membuat file penginstal APK langsung tanpa debugger:
+Untuk membangun paket instalasi APK mandiri:
 
 ```bash
 cd mobile
 flutter build apk --release
 ```
 
-Berkas keluaran siap instalasi tersedia di:  
+Berkas biner keluaran berada pada:  
 `mobile/build/app/outputs/flutter-apk/app-release.apk`
 
 ---
 
 ## Lisensi
 
-Proyek ini dilisensikan di bawah [MIT License](LICENSE).
+Proyek ini dilisensikan di bawah ketentuan [MIT License](LICENSE).
+Hak Cipta (c) 2026 David Yehuda Surbakti.
